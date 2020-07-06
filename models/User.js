@@ -1,13 +1,24 @@
-const { model, Schema } = require("mongoose");
+const { model, Schema } = require('mongoose');
+const { createdAt } = require('./preSave');
 
 const userSchema = new Schema({
-  firstName: { type: String },
-  lastName: { type: String },
-  phoneNumber: { type: String },
-  password: { type: String },
-  post: { type: String },
-  email: { type: String },
-  createdAt: { type: String },
+	id:{type:String},
+	role: {
+		type: String,
+		default: 'PLAYER',
+		enum: [ 'PLAYER', 'ADMIN' ]
+	},
+	password: { type: String },
+	post: { type: String },
+	email: {
+		type: String,
+		unique: true
+	},
+	createdAt:{
+		type:Number
+	}
 });
+createdAt(userSchema);
+
 //change
-module.exports = model("User", userSchema);
+module.exports = model('User', userSchema);

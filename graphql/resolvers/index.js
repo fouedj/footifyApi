@@ -1,27 +1,11 @@
-const postsResolvers=require('./posts')
-const usersResolvers=require('./users');
-const commentsResolvers=require('./comments');
-
-
-module.exports={
-    Post:{
-        likeCount:(parent)=>parent.likes.length
-        //console.log(parent) 
-        ,
-        commentCount:(parent)=> parent.comments.length
-        
-    },
-    Query:{
-        ...postsResolvers.Query
-    },
-    Mutation:{
-       
-        ...usersResolvers.Mutation,
-        ...postsResolvers.Mutation,
-        ...commentsResolvers.Mutation
-
-      },
-      Subscription:{
-          ...postsResolvers.Subscription
-      }
-}
+const teamResolvers = require('./Team');
+const {GraphQLUpload} =require('apollo-server-express');
+module.exports = {
+	Query: {
+		...teamResolvers.Query
+	},
+	Mutation: {
+		...teamResolvers.Mutation
+	},
+	Upload: GraphQLUpload
+};
