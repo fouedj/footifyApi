@@ -6,9 +6,8 @@ mediaRouter.get('/team/:filename',(req,res,next)=>{
     
   const filename=req.params.filename;
   const path=`./images/team/${filename}`;
-  console.log(path)
-  console.log(path)
-    if(existsSync(path)){
+  //console.log(path)
+     if(existsSync(path)){
         try {
             const data = readFileSync(path);
             console.log({data})
@@ -24,8 +23,4 @@ mediaRouter.get('/team/:filename',(req,res,next)=>{
     
 
 })
-
-
-
-
 module.exports=mediaRouter

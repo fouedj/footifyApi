@@ -1,9 +1,7 @@
-const { AuthenticationError, UserInputError } = require('apollo-server');
 const { TeamModel } = require('../../models');
-const player = require('../../models/player');
 const { storeUpload } = require('../../helper/upload');
 const { EXTENSION } = require('../../helper/constant');
-const mediaRouter = require('../../router/media');
+
   
   const processUpload = async upload => {
 	const { createReadStream} = await upload;
