@@ -8,10 +8,12 @@ const { ensureToken } = require('./Token');
 
 async function getUserByToken(token) {
 	const user = await ensureToken(token);
-	return user;
+	const player=await PlayerModel.findById(user.id)
+	return {...user,player}
 }
 
-function generateToken(user, player = null) {
+function generateToken(user, player=null ) {
+
 	return jwt.sign(
 		{
 			id: player.id,
@@ -19,10 +21,11 @@ function generateToken(user, player = null) {
 			role: user.role
 		},
 		SECRET_KEY
-	);
+	) 
 }
 const userRegister = async ({ body, role, res }) => {
 	const { firstName, lastName, email, password, phoneNumber, post } = body;
+	console.log({body})
 	const { errors, valid } = validateRegisterInput({
 		...body
 	});
@@ -58,16 +61,18 @@ const userRegister = async ({ body, role, res }) => {
 				password: hash
 			});
 			const userAdded = await newUser.save();
-			console.log(userAdded);
-			const token = generateToken(userAdded);
+			//console.log({userAdded});
+		
 			const player = new PlayerModel({
-				lastName,
 				firstName,
+				lastName,
 				post,
 				profile: userAdded.id,
 				phoneNumber
 			});
-			player.save((err, resp) => {
+			const token = generateToken(userAdded,player);
+			//console.log({player2:player})
+			 player.save((err, resp) => {
 				if (err)
 					return res.send({
 						success: false,
@@ -116,10 +121,12 @@ const userLogin = async ({ body, res, role }) => {
 	}
 
 	if (user.role == role.PLAYER) {
-		const player = await PlayerModel.findOne({ profile: user.id }).populate('profile');
-		console.log(player);
+		console.log({user});
+		const player = await PlayerModel.findOne({ profile: user.id })
+		console.log({player})
 		const token = generateToken(user, player);
-		console.log(token);
+		console.log({token})
+	
 		return res.send({
 			user: user,
 			player,

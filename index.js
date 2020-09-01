@@ -11,17 +11,20 @@ const AuthRouter = require('./router/auth');
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const { getUserByToken } = require('./util/Auths');
-const uri = process.env.ATLAS_URI;
-const ENDPOINT = process.env.ENDPOINT;
-const PORT = process.env.port;
-const MEDIA=process.env.MEDIA
-const AUTHENTICATE = process.env.AUTHENTICATE;
+
 const cors = require('cors');
 const helmet = require('helmet');
 const { createServer } = require('http');
 const { SubscriptionServer } = require('subscriptions-transport-ws');
 const { execute, subscribe } = require('graphql');
 const mediaRouter = require('./router/media');
+const Agenda = require('agenda');
+
+const uri = process.env.ATLAS_URI;
+const ENDPOINT = process.env.ENDPOINT;
+const PORT = process.env.port;
+const MEDIA=process.env.MEDIA
+const AUTHENTICATE = process.env.AUTHENTICATE;
 const server = new ApolloServer({
 	schema,
 	context: async ({ req }) => {
@@ -31,11 +34,19 @@ const server = new ApolloServer({
 	}
 });
 
-mongoose.connect(uri, { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true });
+mongoose.connect(uri, { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true, });
 const connection = mongoose.connection;
 connection.once('open', () => {
 	console.log('connection is established!!');
 });
+const agenda =  new Agenda({
+	db: {
+		address: 'mongodb://127.0.0.1/footifydb',
+		collection: 'jobs',
+		options: { useNewUrlParser: true, useUnifiedTopology: true }
+	}
+});
+agenda.start()
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true, limit: '10gb' }));
 app.use(bodyParser.json());
@@ -48,8 +59,7 @@ app.use(MEDIA,mediaRouter)
 app.use(ENDPOINT, (req, res, next) => {
 	//console.log("token")
 	let token = req.headers.authorization;
-	console.log(token);
-
+	
 	Token.ensureToken(token).then((valid) => next()).catch((err) => {
 		res.status(401).json({
 			success: false,
@@ -80,6 +90,7 @@ ws
 				subscribe,
 				schema,
 				onConnect: async (connectionParams) => {
+					console.log("On connect server sub ...")
 					if (connectionParams.token) {
 						const token = connectionParams.token;
 

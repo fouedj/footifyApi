@@ -19,6 +19,5 @@ const userSchema = new Schema({
 	}
 });
 createdAt(userSchema);
-
 //change
 module.exports = model('User', userSchema);

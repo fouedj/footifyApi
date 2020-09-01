@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "agenda": "^3.1.0",
     "apollo-server": "^2.9.13",
     "apollo-server-express": "^2.9.7",
     "bcryptjs": "^2.4.3",
@@ -23,6 +24,7 @@
     "express": "^4.16.4",
     "fs": "0.0.1-security",
     "graphql": "^14.5.1",
+    "graphql-subscriptions": "^1.1.0",
     "graphql-tag": "^2.10.1",
     "graphql-tools": "^6.0.12",
     "graphql-upload": "^9.0.0",
@@ -30,10 +32,12 @@
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.27.0",
     "mongoose": "^5.9.6",
+    "mongoose-autopopulate": "^0.12.2",
     "morgan": "^1.10.0",
     "nodemon": "^2.0.4",
     "react-native-image-picker": "^2.3.1",
     "shortid": "^2.2.15",
+    "simple-onesignal": "^1.0.4",
     "split": "^1.0.1",
     "standard": "^14.3.4",
     "subscriptions-transport-ws": "^0.9.16"

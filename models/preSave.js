@@ -1,5 +1,6 @@
 const moment =require('moment')
 function createdAt(schema)  {
+  schema.plugin(require('mongoose-autopopulate'));
       schema.pre("save", function (next) {
       if (this.isNew) {
         this.createdAt = moment().valueOf();
