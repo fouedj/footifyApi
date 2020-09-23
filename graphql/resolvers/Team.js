@@ -14,18 +14,32 @@ const processUpload = async (upload) => {
 };
 module.exports = {
 	Query: {
-		async getTeams(_, {}, { user }) {
+		async getTeams(_, {filter}, { user }) {
 			//console.log('query run ...');
-
+			console.log({filter})
 			try {
-				const query = {
-					'createdBy.player': user.id
-				};
-				console.log({ query });
-				let teams = await TeamModel.find().sort({ createdAt: -1 });
-				teams = teams.filter((team) => team.createdBy.player.id !== user.id);
-				console.log({ teams });
-				return teams;
+				// const query = {
+				// 	'createdBy.player': user.id
+				// };
+				// console.log({ query });
+				// let teams = await TeamModel.find().sort({ createdAt: -1 });
+				return TeamModel.aggregate([
+					{
+					  $geoNear: {
+						 near: { type: "Point", coordinates: [ filter.location.latitude ,filter.location.longitude ] },
+						 distanceField: "distance",
+						 maxDistance: 700000,
+						
+						
+						 spherical: true
+					  }
+					}
+				 ]).then(teams=>{
+					return teams.filter((team) => team.createdBy.player.id !== user.id);
+				
+				
+				 })
+				
 			} catch (err) {
 				throw new Error(err);
 			}

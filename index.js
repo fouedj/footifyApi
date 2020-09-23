@@ -2,16 +2,13 @@ const { ApolloServer } = require('apollo-server-express');
 const express = require('express');
 const morgan = require('morgan');
 const compression = require('compression');
-const typeDefs = require('./graphql/typeDefs');
 const mongoose = require('mongoose');
-const resolvers = require('./graphql/resolvers');
 const schema = require('./graphql');
 const Token = require('./util/Token');
 const AuthRouter = require('./router/auth');
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const { getUserByToken } = require('./util/Auths');
-
 const cors = require('cors');
 const helmet = require('helmet');
 const { createServer } = require('http');
@@ -19,7 +16,6 @@ const { SubscriptionServer } = require('subscriptions-transport-ws');
 const { execute, subscribe } = require('graphql');
 const mediaRouter = require('./router/media');
 const Agenda = require('agenda');
-
 const uri = process.env.ATLAS_URI;
 const ENDPOINT = process.env.ENDPOINT;
 const PORT = process.env.port;
@@ -34,14 +30,18 @@ const server = new ApolloServer({
 	}
 });
 
-mongoose.connect(uri, { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true, });
+mongoose.connect(uri, { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true, }).then(()=>{
+	console.log("db connected")
+}).catch((err)=>{
+	console.log("Error database",err)
+})
 const connection = mongoose.connection;
 connection.once('open', () => {
 	console.log('connection is established!!');
 });
 const agenda =  new Agenda({
 	db: {
-		address: 'mongodb://127.0.0.1/footifydb',
+		address: 'mongodb://localhost:27017/footifydb',
 		collection: 'jobs',
 		options: { useNewUrlParser: true, useUnifiedTopology: true }
 	}

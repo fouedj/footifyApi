@@ -1,6 +1,7 @@
 const Agenda = require('agenda');
 const { withFilter } = require('graphql-subscriptions');
-
+const moment = require('moment');
+const { UserRole } = require('../../helper/constant');
 const { sendNotification } = require('../../helper/notification');
 const { MatchModel, TeamModel, InvitationModel } = require('../../models');
 const { PubSubInstance } = require('../pubSub');
@@ -12,34 +13,44 @@ const Schedule = new Agenda({
 		options: { useNewUrlParser: true, useUnifiedTopology: true }
 	}
 });
-
+function subtractHour({date,nb}){
+	return moment(date).subtract(nb,'hours').valueOf()
+}
 module.exports = {
 	Query: {
-		async getMatchs(_, { status }, { user }) {
+		async getMatchModified(_, { matchId}, { user }) {
 			//console.log('query run ...');
 
 			try {
-				const query = {
-					'createdBy.player': user.id
-				};
-				console.log({ query });
-				const matchs = await MatchModel.find(query).sort({ createdAt: -1 });
-				// console.log({ matchs });
+			
+				console.log({ matchId });
+				
+				const matchModified = await MatchModel.findById(matchId);
+				// console.log({ matchModified });
 				//return null
-				return matchs;
+				return matchModified;
 			} catch (err) {
 				throw new Error(err);
 			}
 		},
 		async getMatchsAdversary(_, { status, invitation }, { user }) {
-			console.log({ status });
+		
+			if(user.role==UserRole.ADMIN){
+				let query = {
+
+				}
+				if(status!== "ALL"){
+					query={
+						status
+					}
+				}
+				return MatchModel.find(query);
+			}
 			const query1 = {
 				'createdBy.player': user.id
 			};
-
 			const teams = await TeamModel.find(query1).select({ id: 1 }).lean();
 			const teamIds = teams.map((item) => item.id);
-			//console.log({teamIds})
 			const query = invitation
 				? {
 						$or: [ { adversaryTeam: { $in: teamIds } } ],
@@ -110,19 +121,19 @@ module.exports = {
 			{ user }
 		) {
 			let data = {
-				adversaryTeam,
+				 adversaryTeam,
 				localTeam,
 				address,
 				stadium,
-				timeStartMatch,
-				timeEndMatch,
+				timeStartMatch:subtractHour({date:timeStartMatch,nb:1}),
+				timeEndMatch:subtractHour({date:timeEndMatch,nb:1}),
 				createdBy: {
 					role: user.role,
 					player: user.id,
 					email: user.email
 				},
 				dateMatch,
-				meetingTime,
+				meetingTime:subtractHour({date:meetingTime,nb:1}),
 				meetingDate,
 				location: {
 					type: 'Point',
@@ -132,59 +143,104 @@ module.exports = {
 			const newMatch = new MatchModel({
 				...data
 			});
-			//console.log({newMatch})
-			//return null
 			const match = await newMatch.save();
-			// if (adversaryTeam) {
-			// 	const object = {
-			// 		player: adversaryTeam,
-			// 		sender: user.id,
-			// 		team: localTeam
-			// 	};
-			// 	new InvitationModel(object).save();
-			// }
-
-			// Schedule.define(`match#${match.id}`, (job, done) => {
-			// 	const now = moment().now();
-			// 	console.log({ now });
-			// 	job.save();
-			// 	done();
-			// });
-			// const job = Schedule.create(`match#${match.id}`, {
-			// 	match
-			// });
-
-			// job.repeatEvery('1 seconds', {
-			// 	skipImmediate: true
-			// });
-			// job.save();
-			// Schedule.start();
-			Schedule.define('printAnalyticsReport', async job => {
+			Schedule.define(`match#${match.id}`, async (job) => {
+				job.save();
+				const now = moment().valueOf();
+				const timeEndMatch = job.attrs.data.match.timeEndMatch;
+				const { id: idMAtch, adversaryTeam, localTeam } = job.attrs.data.match;
+					if (now > timeEndMatch) {
+					MatchModel.updateOne({ id: idMAtch }, { status: 'FINISHED' }).exec(async (err, res) => {
+						if (err) {
+							return Promise.reject(err);
+						}
+						const teams = await TeamModel.find({ id: { $in: [ localTeam, adversaryTeam ] } });
+					
+						const playersIds = teams.map((team) => team.createdBy.player.profile.id);
+						console.log("schools")
+						console.log({playersIds});
+						console.log({id:user.player.profile.id})
+						try{
+							sendNotification({
+								userId:user.player.profile.id,
+								body: "Le match est finis",
+								data:{match:match.id},
+								button: [ { id: 'id_close', text: 'Fermer' }, { id: 'id_open', text: 'Ouvrir' } ]
+							});
+							sendNotification({
+								userId:playersIds[1],
+								body: "Le match est finis",
+								data:{match:match.id},
+								button: [ { id: 'id_close', text: 'Fermer' }, { id: 'id_open', text: 'Ouvrir' } ]
+							});
+						}catch(e){
+							console.log(e)
+							
+						}
+						
+						
+						
+						//Schedule.cancel({ name: `match#${match.id}` });
+					});
+				}
+			});
+			const job1 = Schedule.create(`match#${match.id}`, {
+				match
+			});
+			job1.save()
+			Schedule.every('9 seconds', `match#${match.id}`, {
+				match
 				
-				console.log('I print a report!');
-			  });
-			  
-			  Schedule.every('0.1 seconds', 'printAnalyticsReport');
-			  Schedule.start()
-
+			});
+			Schedule.start();
+				// playersIds.forEach((player) => {
+				// 			sendNotification({
+				// 				userId: player,
+				// 				body: 'Match finished',
+				// 				data:{match}
+				// 			});
+				// 		});
 			return match;
 		},
 
 		async acceptInvitationTeam(_, { matchId, status }, { user }) {
 			//console.log(matchId)
-			console.log({ user });
+			//console.log({ user });
 			await MatchModel.updateOne({ id: matchId }, { $set: { status } }).exec();
 
 			const match = await MatchModel.findById(matchId);
-			PubSubInstance.publish('MATCH_UPDATED', { matchUpdated: match });
+			//console.log({match})
 			sendNotification({
-				userId: user.player.profile.id,
-				body: 'Hello',
+				userId:user.player.profile.id,
+				body: "L'invitation de votre match est accéptée",
+				data:{match:match.id},
 				button: [ { id: 'id_close', text: 'Fermer' }, { id: 'id_open', text: 'Ouvrir' } ]
 			});
-			console.log('ffsdfsd');
+			PubSubInstance.publish('MATCH_UPDATED', { matchUpdated: match });
+			//console.log('ffsdfsd');
 			return match;
-		}
+		},
+		async updateMatch(_,{input},{user}){
+			console.log({input})
+			const {id,winnerTeam,goalLocalTeam,goalAdversaryTeam} = input;
+			Promise.all([MatchModel.findById(id)]).then(([match])=>{
+				if(!!!match) return Promise.reject("Match not found");
+				match.winnerTeam = winnerTeam;
+				match.goalAdversaryTeam = goalAdversaryTeam;
+				match.goalLocalTeam=goalLocalTeam;
+				return Promise.resolve(match.save());
+			})
+		},
+		async deleteMatch(_,{matchId},{user}){
+			if(user.role==UserRole.ADMIN){
+				MatchModel.findById(matchId).then(match=>{
+			  match.remove()
+			 console.log({match})
+			  return match;
+			
+		})}
+			
+		},
 	},
 	Subscription: {
 		matchUpdated: {

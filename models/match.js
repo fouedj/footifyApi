@@ -42,10 +42,13 @@ const matchSchema = new Schema({
 		type: pointSchema
 	},
 	goalLocalTeam: {
-		type: Number
+		type: Number,
+		default:0,
+
 	},
 	goalAdversaryTeam: {
-		type: Number
+		type: Number,
+		default:0,
     },
     timeStartMatch:{
         type:Number
