@@ -194,6 +194,11 @@ module.exports = gql`
 	input TeamFilter{
 		location:LocationInput
 	}
+	type Statistic{
+		countMatch:Int
+		countPlayers:Int
+		countTeams:Int
+	}
 	type Query {
 		getTeams(filter:TeamFilter): [Team]
 		getMyTeams: [Team]
@@ -209,6 +214,8 @@ module.exports = gql`
 		getMatchsAccepted: [Match]
 		getConversations: [Conversation]
 		getConversation(id: ID): ConversationConnection
+		getCountStatistic:Statistic
+		getStstisticMatchByYear(year:Int):[Float]
 	}
 
 	type Subscription {

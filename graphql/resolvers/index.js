@@ -5,13 +5,15 @@ const matchResolvers = require("./match")
 const {GraphQLUpload} =require('apollo-server-express');
 const nestedResolvers = require("./nestedResolvers")
 const conversationResolvers =require('./conversation')
+const statResolvers=require("./statistic")
 module.exports = {
 	Query: {
 		...teamResolvers.Query,
 		...playerResolvers.Query,
 		...invitationResolvers.Query,
 		...matchResolvers.Query,
-		...conversationResolvers.Query
+		...conversationResolvers.Query,
+		...statResolvers.Query
 		
 		
 	},
