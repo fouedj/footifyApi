@@ -199,6 +199,10 @@ module.exports = gql`
 		countPlayers:Int
 		countTeams:Int
 	}
+	type MonthStat{
+		_id:Int
+		count:Float
+	}
 	type Query {
 		getTeams(filter:TeamFilter): [Team]
 		getMyTeams: [Team]
@@ -215,7 +219,7 @@ module.exports = gql`
 		getConversations: [Conversation]
 		getConversation(id: ID): ConversationConnection
 		getCountStatistic:Statistic
-		getStstisticMatchByYear(year:Int):[Float]
+		getStstisticMatchByYear(year:Int):[MonthStat]
 	}
 
 	type Subscription {

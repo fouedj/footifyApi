@@ -93,7 +93,7 @@ ws
 					console.log("On connect server sub ...")
 					if (connectionParams.token) {
 						const token = connectionParams.token;
-
+						
 						return new Promise((resolve, reject) => {
 							getUserByToken(token)
 								.then((res) => {
