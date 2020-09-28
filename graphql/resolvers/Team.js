@@ -16,6 +16,7 @@ module.exports = {
 	Query: {
 		async getTeams(_, {filter}, { user }) {
 			console.log('query run ...')
+			//test
 			if(!!!filter)
 				{return  TeamModel.find().sort({ createdAt: -1 });
 				}
