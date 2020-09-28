@@ -15,7 +15,7 @@ const processUpload = async (upload) => {
 module.exports = {
 	Query: {
 		async getTeams(_, {filter}, { user }) {
-			//console.log('query run ...')
+			console.log('query run ...')
 			if(!!!filter)
 				{return  TeamModel.find().sort({ createdAt: -1 });
 				}
