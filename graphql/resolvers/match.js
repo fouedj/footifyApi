@@ -180,7 +180,7 @@ module.exports = {
 						
 						
 						
-						//Schedule.cancel({ name: `match#${match.id}` });
+						Schedule.cancel({ name: `match#${match.id}` });
 					});
 				}
 			});

@@ -31,7 +31,7 @@ module.exports = {
 					  }
 					}
 				 ]).then(teams=>{
-					return teams.filter((team) => team.createdBy.player.id !== user.id);
+					return teams.filter((team) => String(team.createdBy.player) !== String(user.id));
 				
 				
 				 })
