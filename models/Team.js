@@ -37,4 +37,5 @@ const teamSchema = new Schema({
 	}
 });
 createdAt(teamSchema);
+teamSchema.index({location: "2dsphere"});
 module.exports = model('Team', teamSchema);

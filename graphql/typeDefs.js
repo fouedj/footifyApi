@@ -22,7 +22,11 @@ module.exports = gql`
 		location: PointProps
 		nestedItem: String
 		playerCount: Int
-	
+		countWinnerMatch:Int
+		countLoserMatch:Int
+		countNullMatch:Int
+		totalMatch:Int
+		distance:Float
 	}
 
 	type Match {
@@ -35,28 +39,27 @@ module.exports = gql`
 		goalLocalTeam: Int
 		goalAdversaryTeam: Int
 		location: PointProps
-		timeStartMatch:Float
-		timeEndMatch:Float
-		meetingTime:Float
-		stadium:String
-		createdAt:Float
-		status:STATUS
-		meetingDate:Float
-		dateMatch:Float
+		timeStartMatch: Float
+		timeEndMatch: Float
+		meetingTime: Float
+		stadium: String
+		createdAt: Float
+		status: STATUS
+		meetingDate: Float
+		dateMatch: Float
 	}
 
 	input matchInput {
 		adversaryTeam: ID
 		localTeam: ID
-		dateMatch:Float
-		stadium:String
+		dateMatch: Float
+		stadium: String
 		address: String
-		timeStartMatch:Float
-		timeEndMatch:Float
-		meetingTime:Float
+		timeStartMatch: Float
+		timeEndMatch: Float
+		meetingTime: Float
 		location: inputLocation
-		meetingDate:Float
-	
+		meetingDate: Float
 	}
 
 	type PointProps {
@@ -108,10 +111,12 @@ module.exports = gql`
 		player: Player
 		createdAt: Float
 	}
-	enum STATUS{
+
+	enum STATUS {
 		ACCEPTED
 		REFUSED
 		WAITING
+		FINISHED
 	}
 
 	type CreatedBy {
@@ -144,39 +149,104 @@ module.exports = gql`
 		phoneNumber: String
 	}
 
-	type Mutation {
-		createTeam(input: teamInput): Team!
-		createMatch(input: matchInput): Match!
-		editTeam(teamId: ID, input: teamInputEdit): Team
-		deleteTeam(teamId: ID): String
-		deleteInvitation(invitationId: ID): String
-		acceptInvitation(teamId: ID): Invitation
-		acceptInvitationTeam(matchId:ID,status:String):Match
-		editPlayer(playerId: ID, input: inputPlayerEdit): Player
+	input MatchUpdateInput {
+		id: ID
+		winnerTeam: String
+		goalAdversaryTeam: Int
+		goalLocalTeam: Int
 	}
 
+	type Conversation {
+		id: ID
+		sender: Player
+		lastMessage: Message
+		receiver: Player
+		createdAt: Float
+	}
+
+	type Message {
+		id: ID
+		sender: Player
+		receiver: Player
+		isSeen: Boolean
+		seenAt: Float
+		conversation: Conversation
+		body: String
+		createdAt: Float
+	}
+
+	input MessageInput {
+		to: String
+		conversation: ID
+		body: String
+	}
+	type ConversationConnection{
+		messages:[Message]
+		lastMessage:Message
+		unReadedMessage:Int
+		sender:Player
+		receiver:Player
+	}
+	input LocationInput{
+		latitude:Float
+		longitude:Float
+	}
+	input TeamFilter{
+		location:LocationInput
+	}
+	type Statistic{
+		countMatch:Int
+		countPlayers:Int
+		countTeams:Int
+	}
+	type MonthStat{
+		_id:Int
+		count:Float
+	}
 	type Query {
-		getTeams: [Team]
+		getTeams(filter:TeamFilter): [Team]
 		getMyTeams: [Team]
 		getTeam(TeamId: ID!): Team
 		getPlayers: [Player]
 		getPlayer(firstName: String): [Player]
 		getInvitations: [Invitation]
 		getNumberInvitations: Int
-		getInvitationsTeam:Int
+		getInvitationsTeam: Int
 		getPlayerUser: Player
-		getMatchs(status:String):[Match]
-		getMatchsAdversary(status:String,invitation:Boolean):[Match]
-		getMatchsAccepted:[Match]
+		getMatchModified(matchId: ID): Match
+		getMatchsAdversary(status: String, invitation: Boolean): [Match]
+		getMatchsAccepted: [Match]
+		getConversations: [Conversation]
+		getConversation(id: ID): ConversationConnection
+		getCountStatistic:Statistic
+		getStstisticMatchByYear(year:Int):[MonthStat]
 	}
+
 	type Subscription {
-		matchUpdated(id:String):Match
-		invitationAdded(id:String):Invitation
+		matchUpdated(id: String): Match
+		invitationAdded(id: String): Invitation
+		messageAdded(id:String):Message
+	}
+
+	type Mutation {
+		createTeam(input: teamInput): Team!
+		createMatch(input: matchInput): Match!
+		deleteMatch(matchId:ID):Match
+		editTeam(teamId: ID, input: teamInputEdit): Team
+		deleteTeam(teamId: ID): String
+		deletePlayer(playerId:ID):String
+		deleteInvitation(invitationId: ID): String
+		acceptInvitation(teamId: ID): Invitation
+		acceptInvitationTeam(matchId: ID, status: String): Match
+		editPlayer(playerId: ID, input: inputPlayerEdit): Player
+		updateMatch(input: MatchUpdateInput): Match
+		addMessage(input: MessageInput): Message
+		readMessage(id: ID): Message
 	}
 
 	schema {
 		query: Query
 		mutation: Mutation
-		subscription:Subscription
+		subscription: Subscription
 	}
 `;

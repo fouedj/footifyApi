@@ -1,5 +1,5 @@
 const { validateRegisterInput, validateLoginInput } = require('./validators');
-const { PlayerModel, UserModel } = require('../models');
+const { PlayerModel, UserModel, AdminModel } = require('../models');
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -121,15 +121,29 @@ const userLogin = async ({ body, res, role }) => {
 	}
 
 	if (user.role == role.PLAYER) {
-		console.log({user});
+		//console.log({user});
 		const player = await PlayerModel.findOne({ profile: user.id })
-		console.log({player})
+		//console.log({player})
 		const token = generateToken(user, player);
 		console.log({token})
 	
 		return res.send({
 			user: user,
 			player,
+			token,
+			success: true
+		});
+	}
+	if (user.role == role.ADMIN) {
+		console.log({user});
+		const admin = await AdminModel.findOne({ profile: user.id })
+		
+		const token = generateToken(user, admin);
+		console.log({token})
+	
+		return res.send({
+			user: user,
+			admin,
 			token,
 			success: true
 		});

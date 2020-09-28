@@ -1,6 +1,7 @@
-const { EXTENSION } = require('../../helper/constant');
+const { EXTENSION, UserRole } = require('../../helper/constant');
 const { storeUpload } = require('../../helper/upload');
-const { PlayerModel } = require('../../models');
+const { PlayerModel, TeamModel } = require('../../models');
+const { UserModel } = require('../../models');
 const processUpload = async (upload) => {
 	const { createReadStream } = await upload;
 	const filename = `player/${Date.now()}${EXTENSION}`;
@@ -66,6 +67,22 @@ module.exports = {
 					return player
 				});
 			}
+		},
+		async deletePlayer(_,{playerId},{user}){
+		if(user.role==UserRole.ADMIN){
+			PlayerModel.findById(playerId).then(async (player)=>{
+				if(player){
+					player.remove();
+			await	TeamModel.deleteMany({
+					"createdBy.player":playerId
+				})
+					 UserModel.findOne({id:player.profile.id}).then((user)=>{
+						 if(user)
+						 user.remove()
+					 })
+				}
+			})
+		}
 		}
 	}
 };

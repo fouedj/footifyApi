@@ -1,6 +1,6 @@
 const { TeamModel, InvitationModel } = require('../../models');
 const { storeUpload } = require('../../helper/upload');
-const { EXTENSION } = require('../../helper/constant');
+const { EXTENSION, UserRole } = require('../../helper/constant');
 const moment = require('moment');
 const { PubSubInstance } = require('../pubSub');
 const { withFilter } =require('graphql-subscriptions');
@@ -14,18 +14,28 @@ const processUpload = async (upload) => {
 };
 module.exports = {
 	Query: {
-		async getTeams(_, {}, { user }) {
-			//console.log('query run ...');
-
+		async getTeams(_, {filter}, { user }) {
+			//console.log('query run ...')
+			if(!!!filter)
+				{return  TeamModel.find().sort({ createdAt: -1 });
+				}
 			try {
-				const query = {
-					'createdBy.player': user.id
-				};
-				console.log({ query });
-				let teams = await TeamModel.find().sort({ createdAt: -1 });
-				teams = teams.filter((team) => team.createdBy.player.id !== user.id);
-				console.log({ teams });
-				return teams;
+				
+				return TeamModel.aggregate([
+					{
+					  $geoNear: {
+						 near: { type: "Point", coordinates: [ filter.location.latitude ,filter.location.longitude ] },
+						 distanceField: "distance",
+						 maxDistance: 700000,
+						 spherical: true
+					  }
+					}
+				 ]).then(teams=>{
+					return teams.filter((team) => team.createdBy.player.id !== user.id);
+				
+				
+				 })
+				
 			} catch (err) {
 				throw new Error(err);
 			}

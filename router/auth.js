@@ -11,7 +11,14 @@ AuthRouter.post('/login', async function(req, res, next) {
 		res
 	});
 });
-
+AuthRouter.post('/login/admin', async function(req, res, next) {
+	//console.log("loginnn")
+	userLogin({
+		body: req.body,
+		role: UserRole,
+		res
+	});
+});
 //user Registeration Route
 AuthRouter.post('/register', async (req, res) => {
 	userRegister({
